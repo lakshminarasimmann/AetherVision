@@ -1,6 +1,6 @@
 # AI-Powered Image Quality & Defect Detection
 
-![CI/CD Status](https://github.com/your-username/repo-name/actions/workflows/main.yml/badge.svg)
+[![CI/CD Pipeline](https://github.com/lakshminarasimmann/mage-quality-defect-detection/actions/workflows/main.yml/badge.svg)](https://github.com/lakshminarasimmann/mage-quality-defect-detection/actions/workflows/main.yml)
 
 This is a complete, production-ready full-stack application that accepts images and automatically evaluates their visual quality. Designed to demonstrate a meaningful and explainable use of Computer Vision and Machine Learning, the system employs a **Hybrid AI Approach** to detect common degradation issues and localize them using **Quality Heatmaps**.
 
