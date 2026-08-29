@@ -116,7 +116,12 @@ def generate_synthetic_data(base_image_dir, num_samples_per_image=10):
 
 def train_model():
     print("Generating synthetic dataset...")
-    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../data/raw_images'))
+    candidates = [
+        os.path.abspath(os.path.join(os.path.dirname(__file__), '../../data/raw_images')),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../data/raw_images')),
+        os.path.abspath("data/raw_images")
+    ]
+    base_dir = next((p for p in candidates if os.path.exists(p)), candidates[0])
     dataset = generate_synthetic_data(base_dir, num_samples_per_image=30)
     
     if not dataset:
