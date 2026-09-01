@@ -18,14 +18,15 @@
 3. [Technology Stack](#-technology-stack)
 4. [Theoretical Methodology: Computer Vision & Feature Extraction](#-theoretical-methodology-computer-vision--feature-extraction)
 5. [AI / Machine Learning Model Architecture](#-ai--machine-learning-model-architecture)
-6. [Dataset & Synthetic Degradation Pipeline](#-dataset--synthetic-degradation-pipeline)
-7. [Explainability & Spatial Heatmaps (Localization)](#-explainability--spatial-heatmaps-localization)
-8. [Codebase Architecture & File-by-File Guide](#-codebase-architecture--file-by-file-guide)
-9. [REST API Specification](#-rest-api-specification)
-10. [Quick Start & Setup Guide](#-quick-start--setup-guide)
-11. [Command-Line Interface (CLI) Tool](#-command-line-interface-cli-tool)
-12. [Automated Testing & Verification](#-automated-testing--verification)
-13. [Author & Credits](#-author--credits)
+6. [Model Performance & Quantitative Evaluation Metrics](#-model-performance--quantitative-evaluation-metrics)
+7. [Dataset & Synthetic Degradation Pipeline](#-dataset--synthetic-degradation-pipeline)
+8. [Explainability & Spatial Heatmaps (Localization)](#-explainability--spatial-heatmaps-localization)
+9. [Codebase Architecture & File-by-File Guide](#-codebase-architecture--file-by-file-guide)
+10. [REST API Specification](#-rest-api-specification)
+11. [Quick Start & Setup Guide](#-quick-start--setup-guide)
+12. [Command-Line Interface (CLI) Tool](#-command-line-interface-cli-tool)
+13. [Automated Testing & Verification](#-automated-testing--verification)
+14. [Author & Credits](#-author--credits)
 
 ---
 
@@ -146,6 +147,46 @@ The network is trained using a combined composite loss function:
 * **Quality Score Regression**: Mean Squared Error ($\text{MSE}$) between predicted and ground-truth quality scores.
 * **Defect Classification**: Multi-label Binary Cross-Entropy ($\text{BCE}$) across the 5 independent defect probability logits.
 * **Joint Optimization**: The defect loss is weighted ($2.0 \times$) relative to the regression loss to ensure the network strictly penalizes missed defect identification.
+
+---
+
+## 📊 Model Performance & Quantitative Evaluation Metrics
+
+The hybrid model was evaluated on a dedicated, held-out test split of synthetic images containing diverse defect combinations:
+
+### 1. Overall Classification Performance (Multi-Label)
+| Metric | Score | Description |
+| :--- | :--- | :--- |
+| **Macro Precision** | **86.76%** | Average precision across all 5 defect categories |
+| **Macro Recall** | **66.69%** | Average recall across all 5 defect categories |
+| **Macro F1-Score** | **71.44%** | Harmonic mean of Macro Precision and Recall |
+| **Micro F1-Score** | **77.31%** | Globally aggregated F1-score across all binary decisions |
+| **Macro ROC-AUC** | **0.8436** | Area Under Receiver Operating Characteristic Curve |
+| **Subset Accuracy** | **56.86%** | Exact match ratio where all 5 defect labels match simultaneously |
+
+### 2. Per-Defect Diagnostic Breakdown
+| Defect Type | Precision | Recall | F1-Score | ROC-AUC | Primary Driving Feature |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Image Noise** | **100.00%** | **95.24%** | **97.56%** | **0.9937** | Residual High-Frequency Differential ($ \mu(\vert I - G_\sigma * I \vert) $) |
+| **Overexposure** | **87.50%** | **77.78%** | **82.35%** | **0.9206** | HSV Luminance Mean ($ \mu_V > 0.75 $) |
+| **Underexposure** | **58.82%** | **83.33%** | **68.97%** | **0.9124** | HSV Luminance Mean ($ \mu_V < 0.35 $) |
+| **Blur / Defocus** | **87.50%** | **43.75%** | **58.33%** | **0.7911** | Discrete Laplacian Variance ($ \sigma^2(\nabla^2 I) $) |
+| **Patch Corruption** | **100.00%** | **33.33%** | **50.00%** | **0.6000** | Boundary Histogram Clipping Fraction |
+
+### 3. Continuous Quality Score Regression Metrics
+| Metric | Value | Theoretical Interpretation |
+| :--- | :--- | :--- |
+| **Mean Squared Error (MSE)** | **0.0516** | Normalized mean squared deviation on $[0.0, 1.0]$ scale |
+| **Root Mean Squared Error (RMSE)** | **0.2272** | Corresponds to $\approx 22.7$ points deviation on a $0 - 100$ scale |
+| **Mean Absolute Error (MAE)** | **0.1847** | Average absolute score deviation of $\approx 18.5$ points |
+| **Pearson Correlation (PCC)** | **0.5297** | Moderate-to-strong linear correlation between predicted & actual quality |
+| **Coefficient of Determination ($R^2$)** | **0.2745** | Variance explained by the 6-D engineered feature MLP |
+
+> **To reproduce these metrics on your local environment:**
+> ```powershell
+> cd backend
+> python app/ml/evaluate.py
+> ```
 
 ---
 
