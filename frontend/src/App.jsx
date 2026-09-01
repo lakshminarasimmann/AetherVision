@@ -3,6 +3,8 @@ import axios from 'axios';
 import { Upload, Activity, AlertTriangle, CheckCircle } from 'lucide-react';
 import './index.css';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 function App() {
   const [files, setFiles] = useState([]);
   const [previews, setPreviews] = useState([]);
@@ -50,13 +52,13 @@ function App() {
     try {
       if (files.length === 1) {
         formData.append('file', files[0]);
-        const response = await axios.post('http://localhost:8000/api/v1/analyze', formData, {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/analyze`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         setResults([response.data]); // Store as array for uniform rendering
       } else {
         files.forEach(f => formData.append('files', f));
-        const response = await axios.post('http://localhost:8000/api/v1/analyze-batch', formData, {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/analyze-batch`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         setResults(response.data.batch_results);
