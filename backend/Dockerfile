@@ -6,14 +6,13 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y libgl1 libglib2.0-0 && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
 
 # Copy the rest of the application
 COPY . .
 
-# Run the data generation and training script if model doesn't exist
-# We will do this before starting the server
-RUN python download_images.py && python app/ml/train.py || echo "Warning: Training failed. Model will use random weights."
+# Run data generation and training before starting the server
+RUN python download_images.py && python app/ml/train.py
 
 # Expose port
 EXPOSE 8000
