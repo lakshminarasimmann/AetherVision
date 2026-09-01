@@ -1,4 +1,4 @@
-# AI-Powered Image Quality & Defect Detection Platform
+# AetherVision AI — Autonomous Image Quality & Defect Localization Platform
 
 [![Live Backend API](https://img.shields.io/badge/Live%20API-Render-brightgreen?logo=render)](https://image-quality-defect-detection-760o.onrender.com)
 [![Swagger Docs](https://img.shields.io/badge/API%20Docs-Swagger-blue?logo=swagger)](https://image-quality-defect-detection-760o.onrender.com/docs)
@@ -8,12 +8,12 @@
 [![OpenCV](https://img.shields.io/badge/OpenCV-4.8.1-5C3EE8?logo=opencv)](https://opencv.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://reactjs.org)
 
-A complete, production-ready AI full-stack application that accepts images and automatically evaluates visual quality, identifies specific photographic defects, localizes spatial degradations using thermal heatmaps, and persists historical diagnostics.
+**AetherVision AI** is a production-grade artificial intelligence platform engineered to evaluate image visual quality, identify photographic defects, localize spatial degradations using thermal heatmaps, and persist historical diagnostics.
 
 ---
 
 ## 📑 Table of Contents
-1. [Project Overview & Problem Statement](#-project-overview--problem-statement)
+1. [Product Overview & Problem Statement](#-product-overview--problem-statement)
 2. [End-to-End System Workflow](#-end-to-end-system-workflow)
 3. [Technology Stack](#-technology-stack)
 4. [Theoretical Methodology: Computer Vision & Feature Extraction](#-theoretical-methodology-computer-vision--feature-extraction)
@@ -25,17 +25,18 @@ A complete, production-ready AI full-stack application that accepts images and a
 10. [Quick Start & Setup Guide](#-quick-start--setup-guide)
 11. [Command-Line Interface (CLI) Tool](#-command-line-interface-cli-tool)
 12. [Automated Testing & Verification](#-automated-testing--verification)
+13. [Author & Credits](#-author--credits)
 
 ---
 
-## 📌 Project Overview & Problem Statement
+## 📌 Product Overview & Problem Statement
 
-In real-world computer vision applications, incoming images often suffer from various physical and digital degradations—such as optical defocus blur, sensor noise, severe underexposure/overexposure, and data transmission corruption. 
+In real-world computer vision pipelines, incoming images often suffer from physical and digital degradations—such as optical defocus blur, sensor noise, severe underexposure/overexposure, and data transmission corruption. 
 
-This platform provides an automated quality evaluation system that determines whether an uploaded image is **Acceptable**, **Degraded**, or **Defective** without relying on external cloud vision APIs.
+**AetherVision AI** provides an automated diagnostic system that classifies whether an uploaded image is **Acceptable**, **Degraded**, or **Defective** without relying on expensive, proprietary third-party cloud vision APIs.
 
-### Core Objectives:
-* **Zero External API Costs**: Runs entirely on local open-source libraries (PyTorch and OpenCV).
+### Core Capabilities:
+* **Zero External API Costs**: Runs 100% locally with open-source PyTorch and OpenCV.
 * **Hybrid Intelligence**: Combines deterministic computer vision feature extraction with a multi-task neural network to avoid "black box" decisions.
 * **Spatial Explainability**: Generates visual degradation heatmaps pinpointing exact regions of blur or corruption.
 * **Batch Processing**: Supports concurrent multi-image triage via an interactive drag-and-drop interface.
@@ -49,7 +50,7 @@ This platform provides an automated quality evaluation system that determines wh
 [User Browser]
        │
        ▼ (1. Drag-and-Drop Image / Batch of Images)
-[React 18 SPA Frontend] ──(2. Multipart HTTP POST Request)──▶ [FastAPI Backend]
+[React 18 SPA (Vite)] ──(2. Multipart HTTP POST Request)──▶ [FastAPI Backend Gateway]
                                                                       │
                                    ┌──────────────────────────────────┴──────────────────────────────────┐
                                    ▼                                                                     ▼
@@ -66,11 +67,11 @@ This platform provides an automated quality evaluation system that determines wh
                       - Predicts Defect Probabilities (Blur, Noise, Exposure, Corruption)
                                    │
                                    ▼
-                      [JSON Response + Base64 Heatmap Overlay] ──▶ [React Frontend Visualizer]
+                      [JSON Response + Base64 Heatmap Overlay] ──▶ [React Frontend Studio]
 ```
 
 ### Execution Steps:
-1. **User Interaction**: The user uploads single or multiple images through the React user interface.
+1. **User Ingestion**: The user uploads single or multiple images through the AetherVision React UI.
 2. **Preprocessing & Feature Extraction**: The FastAPI backend receives the binary stream and resizes images to a standard dimension ($512 \times 512$). OpenCV calculates statistical metrics representing sharpness, luminance, contrast, noise, saturation, and corruption.
 3. **Heatmap Generation**: OpenCV divides the image into a $16 \times 16$ spatial grid, evaluates localized edge transitions, and renders a JET-colormap heatmap overlay.
 4. **Neural Inference**: The 6 extracted statistical features are fed into a trained PyTorch neural network that outputs the overall continuous quality score and defect probabilities.
@@ -83,7 +84,7 @@ This platform provides an automated quality evaluation system that determines wh
 
 | Layer | Technologies | Role & Purpose |
 | :--- | :--- | :--- |
-| **Frontend** | React 18, Vite, Vanilla CSS | Single Page Application with dark-mode glassmorphic aesthetics, drag-and-drop dropzone, dynamic radial gauge, and heatmap visualizer. |
+| **Frontend** | React 18, Vite, Vanilla CSS, Lucide Icons | Single Page Application featuring an Obsidian & Emerald glassmorphic dark theme, drag-and-drop dropzone, dynamic radial gauge, and heatmap visualizer. |
 | **Backend API** | Python 3.11, FastAPI, Uvicorn | Asynchronous REST gateway handling file parsing, validation, ML pipeline orchestration, and OpenAPI documentation. |
 | **Machine Learning** | PyTorch (`torch`, `torchvision`) | Multi-task Multilayer Perceptron (MLP) neural network with dual output heads. |
 | **Computer Vision** | OpenCV (`opencv-python-headless`), NumPy | Deterministic photometric feature extraction, edge filtering, and spatial heatmap generation. |
@@ -112,7 +113,7 @@ Rather than treating image quality assessment as an uninterpretable deep neural 
 * **Mechanism**: We apply a Gaussian smoothing filter to suppress high-frequency noise, creating a reference low-frequency image. Subtracting this smoothed image from the original grayscale image isolates high-frequency residual noise.
 
 ### 4. Corruption & Artifact Detection (Boundary Histogram Clipping)
-* **Theory**: Digital transmission errors, sensor sensor burnouts, and patch corruptions often produce unnatural clusters of solid black ($0$) or solid white ($255$) pixels.
+* **Theory**: Digital transmission errors, sensor burnouts, and patch corruptions often produce unnatural clusters of solid black ($0$) or solid white ($255$) pixels.
 * **Mechanism**: We measure the fraction of total pixels located at the extreme boundaries of the 8-bit intensity histogram.
 
 ---
@@ -141,7 +142,7 @@ Feature Vector (Sharpness, Brightness, Contrast, Noise, Saturation, Clipping) [6
 ```
 
 ### Multi-Task Loss Objective:
-The network is optimized using a combined composite loss function:
+The network is trained using a combined composite loss function:
 * **Quality Score Regression**: Mean Squared Error ($\text{MSE}$) between predicted and ground-truth quality scores.
 * **Defect Classification**: Multi-label Binary Cross-Entropy ($\text{BCE}$) across the 5 independent defect probability logits.
 * **Joint Optimization**: The defect loss is weighted ($2.0 \times$) relative to the regression loss to ensure the network strictly penalizes missed defect identification.
@@ -165,7 +166,7 @@ From each clean base image, the pipeline programmatically generates 30 controlle
 * **Patch Corruption**: Random rectangular black-out masks simulating transmission packet loss.
 
 ### 3. Balanced Training
-Each degradation mathematically decrements the ground-truth quality score and sets corresponding defect binary labels, yielding a balanced dataset split ($80\%$ training, $20\%$ validation) for supervised learning.
+Each degradation programmatically calculates ground-truth labels and scores, creating a balanced dataset split ($80\%$ training, $20\%$ validation) for supervised learning.
 
 ---
 
@@ -187,10 +188,10 @@ Beyond returning numerical scores, the system localizes problematic regions:
 iiit_assignment/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py               # FastAPI application entrypoint & CORS middleware
-│   │   ├── api.py                # REST route handlers (/analyze, /analyze-batch, /history, /health)
-│   │   ├── database.py           # SQLAlchemy SQLite database session manager
-│   │   ├── models.py             # SQLAlchemy ORM database models
+│   │   ├── main.py               # FastAPI entrypoint, root route & CORS middleware
+│   │   ├── api.py                # REST routes (/analyze, /analyze-batch, /history, /health)
+│   │   ├── database.py           # SQLAlchemy SQLite session manager
+│   │   ├── models.py             # Database models
 │   │   └── ml/
 │   │       ├── model.py          # PyTorch Multi-Task MLP neural network definition
 │   │       ├── cv_features.py    # OpenCV feature extraction & spatial heatmap generator
@@ -205,12 +206,12 @@ iiit_assignment/
 │       └── test_api.py           # Automated test suite (routes, ML inference, DB)
 ├── frontend/
 │   ├── src/
-│   │   ├── App.jsx               # Main React UI component (Dropzone, Score Meter, Heatmap viewer)
-│   │   ├── index.css             # Vanilla CSS design tokens, glassmorphism & dark-mode styling
+│   │   ├── App.jsx               # AetherVision React UI Studio (Dropzone, Score Meter, Heatmap viewer)
+│   │   ├── index.css             # Vanilla CSS design system (Obsidian & Emerald glassmorphic dark theme)
 │   │   └── main.jsx              # React DOM root mounting
 │   ├── package.json              # Frontend dependencies (React, Vite, Axios, Lucide)
 │   ├── Dockerfile                # Multi-stage Nginx production container definition
-│   └── index.html                # HTML entrypoint
+│   └── index.html                # HTML entrypoint with modern Google Fonts
 ├── .github/
 │   └── workflows/
 │       └── main.yml              # GitHub Actions CI/CD automated test & build workflow
@@ -219,18 +220,15 @@ iiit_assignment/
 └── README.md                     # Comprehensive project documentation
 ```
 
-### Detailed Component Roles:
-* [`backend/app/ml/cv_features.py`](backend/app/ml/cv_features.py): Extracts numerical statistics (sharpness, brightness, contrast, noise, saturation, clipping) and generates the JET colormap heatmap.
-* [`backend/app/ml/model.py`](backend/app/ml/model.py): Defines the dual-head PyTorch neural network.
-* [`backend/app/ml/inference.py`](backend/app/ml/inference.py): Loads the trained `model.pth`, executes the feature extraction, runs tensor forward passes, and applies confidence thresholding.
-* [`backend/app/api.py`](backend/app/api.py): Provides endpoints for single-image upload, batch processing, database logging, and historical query retrieval.
-* [`frontend/src/App.jsx`](frontend/src/App.jsx): React component featuring drag-and-drop batch ingestion, dynamic radial SVG score meters, defect severity badges, and side-by-side thermal heatmap comparison.
-
 ---
 
 ## 📡 REST API Specification
 
-### 1. Analyze Single Image
+### 1. Root Service Information
+* **GET** `/`
+* **Response**: Returns API status, version, documentation URLs, and available endpoints.
+
+### 2. Analyze Single Image
 * **POST** `/api/v1/analyze`
 * **Content-Type**: `multipart/form-data`
 * **Request Body**: `file` (Binary Image File)
@@ -260,17 +258,17 @@ iiit_assignment/
 }
 ```
 
-### 2. Analyze Batch of Images
+### 3. Analyze Batch of Images
 * **POST** `/api/v1/analyze-batch`
 * **Content-Type**: `multipart/form-data`
 * **Request Body**: `files` (Array of Binary Image Files)
 * **Response**: Returns a JSON object containing `batch_results` array with individual analysis records.
 
-### 3. Analysis History
+### 4. Analysis History
 * **GET** `/api/v1/history?skip=0&limit=50`
 * **Response**: Array of historical database records ordered chronologically.
 
-### 4. Health Check
+### 5. Health Check
 * **GET** `/api/v1/health`
 * **Response**: `{"status": "ok"}`
 
@@ -298,6 +296,7 @@ python app/ml/train.py
 uvicorn app.main:app --reload --port 8000
 ```
 * Interactive API Documentation (Swagger UI): **[http://localhost:8000/docs](http://localhost:8000/docs)**
+* Live Cloud API: **[https://image-quality-defect-detection-760o.onrender.com/docs](https://image-quality-defect-detection-760o.onrender.com/docs)**
 
 ### 2. Start Frontend UI (In a new terminal)
 ```powershell
@@ -329,9 +328,8 @@ cd backend
 python -m pytest tests/ -v
 ```
 
-### Automated Checks:
-* `test_health_check`: Validates HTTP 200 health probe.
-* `test_analyze_image`: Tests single-image upload, database persistence, quality score generation, and base64 heatmap validity.
-* `test_analyze_batch`: Tests multi-part batch endpoints and response formatting.
-* `test_analyze_invalid_file`: Tests HTTP 400 rejection for non-image payloads.
-* `test_get_history`: Tests database retrieval of past records.
+---
+
+## 👨‍💻 Author & Credits
+
+Developed by [lakshminarasimmann](https://lakshminarasimman.vercel.app/)
