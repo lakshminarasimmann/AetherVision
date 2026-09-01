@@ -6,216 +6,234 @@
 [![OpenCV](https://img.shields.io/badge/OpenCV-4.8.1-5C3EE8?logo=opencv)](https://opencv.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://reactjs.org)
 
-A complete, high-performance artificial intelligence web application engineered to evaluate image visual quality, identify photographic defects, localize spatial degradations using thermal heatmaps, and persist historical diagnostics.
+A complete, production-ready AI full-stack application that accepts images and automatically evaluates visual quality, identifies specific photographic defects, localizes spatial degradations using thermal heatmaps, and persists historical diagnostics.
 
 ---
 
 ## 📑 Table of Contents
-1. [Quick Start (Simple 2-Step Local Run)](#-quick-start-simple-2-step-local-run)
-2. [Executive Summary & Problem Statement](#-executive-summary--problem-statement)
-3. [System Architecture & Data Flow](#-system-architecture--data-flow)
-4. [Defect Taxonomy & Detection Capabilities](#-defect-taxonomy--detection-capabilities)
-5. [Computer Vision Feature Engineering (Mathematical Formulations)](#-computer-vision-feature-engineering)
-6. [Hybrid AI / Machine Learning Engine](#-hybrid-ai--machine-learning-engine)
-7. [Explainability & Spatial Quality Heatmaps](#-explainability--spatial-quality-heatmaps)
-8. [Synthetic Dataset Generation Pipeline](#-synthetic-dataset-generation-pipeline)
-9. [Backend REST API Specification](#-backend-rest-api-specification)
-10. [Database Schema & Persistence](#-database-schema--persistence)
-11. [Frontend UI/UX Implementation](#-frontend-uiux-implementation)
-12. [CLI Inference Utility](#-cli-inference-utility)
-13. [Automated Verification & Testing](#-automated-verification--testing)
-14. [Assessment Criteria Alignment Matrix](#-assessment-criteria-alignment-matrix)
+1. [Project Overview & Problem Statement](#-project-overview--problem-statement)
+2. [End-to-End System Workflow](#-end-to-end-system-workflow)
+3. [Technology Stack](#-technology-stack)
+4. [Theoretical Methodology: Computer Vision & Feature Extraction](#-theoretical-methodology-computer-vision--feature-extraction)
+5. [AI / Machine Learning Model Architecture](#-ai--machine-learning-model-architecture)
+6. [Dataset & Synthetic Degradation Pipeline](#-dataset--synthetic-degradation-pipeline)
+7. [Explainability & Spatial Heatmaps (Localization)](#-explainability--spatial-heatmaps-localization)
+8. [Codebase Architecture & File-by-File Guide](#-codebase-architecture--file-by-file-guide)
+9. [REST API Specification](#-rest-api-specification)
+10. [Quick Start & Setup Guide](#-quick-start--setup-guide)
+11. [Command-Line Interface (CLI) Tool](#-command-line-interface-cli-tool)
+12. [Automated Testing & Verification](#-automated-testing--verification)
 
 ---
 
-## ⚡ Quick Start (Simple 2-Step Local Run)
+## 📌 Project Overview & Problem Statement
 
-No Docker configuration or complicated setup required. Run directly on your machine in seconds:
+In real-world computer vision applications, incoming images often suffer from various physical and digital degradations—such as optical defocus blur, sensor noise, severe underexposure/overexposure, and data transmission corruption. 
 
-### Step 1: Start the Backend (Terminal 1)
-```powershell
-cd backend
+This platform provides an automated quality evaluation system that determines whether an uploaded image is **Acceptable**, **Degraded**, or **Defective** without relying on external cloud vision APIs.
 
-# 1. Create and activate virtual environment
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-# On macOS/Linux: source venv/bin/activate
-
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Download training sample images & train model
-python download_images.py
-python app/ml/train.py
-
-# 4. Start the FastAPI server
-uvicorn app.main:app --reload --port 8000
-```
-*Backend is now live with interactive API documentation at:* **[http://localhost:8000/docs](http://localhost:8000/docs)**
+### Core Objectives:
+* **Zero External API Costs**: Runs entirely on local open-source libraries (PyTorch and OpenCV).
+* **Hybrid Intelligence**: Combines deterministic computer vision feature extraction with a multi-task neural network to avoid "black box" decisions.
+* **Spatial Explainability**: Generates visual degradation heatmaps pinpointing exact regions of blur or corruption.
+* **Batch Processing**: Supports concurrent multi-image triage via an interactive drag-and-drop interface.
+* **Transactional Persistence**: Records historical diagnostics in an SQLite database.
 
 ---
 
-### Step 2: Start the Frontend (Terminal 2)
-```powershell
-cd frontend
-
-# 1. Install packages & start development server
-npm install
-npm run dev
-```
-*Open your browser to:* **[http://localhost:5173](http://localhost:5173)**
-
----
-
-## 📌 Executive Summary & Problem Statement
-
-Modern image processing systems require automated quality verification to eliminate unreadable, corrupted, blurred, or noisy imagery before feeding downstream models or archival systems. 
-
-This platform solves that challenge by providing:
-- **Zero External AI Dependencies**: Runs 100% locally with open-source PyTorch and OpenCV without calling third-party proprietary APIs.
-- **Explainable Quality Assessment**: Every judgment is tied directly to engineered photometric and spatial statistical metrics.
-- **Defect Localization**: Pinpoints exact coordinates of degradation via dynamic colormapped heatmaps.
-- **Batch & Real-Time Processing**: Supports both single-image analysis and concurrent multi-file batch uploads.
-- **Transactional Persistence**: Built-in SQLite database stores historical metrics for auditing.
-
----
-
-## 🏗 System Architecture & Data Flow
+## 🔄 End-to-End System Workflow
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                                CLIENT BROWSER                                   │
-│  [ React 18 SPA (Vite) + Vanilla CSS Glassmorphism + Live Heatmap Visualizer ]  │
-└────────────────────────────────────────┬────────────────────────────────────────┘
-                                         │  HTTP / Multipart (Axios)
-                                         ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                               FASTAPI BACKEND GATEWAY                           │
-│  - Input Validation & Stream Parser    - SQLite SQLAlchemy Persistence          │
-│  - Single Image (/analyze)             - Batch Processor (/analyze-batch)       │
-│  - History Query Engine (/history)     - Health Check Monitor (/health)         │
-└──────────────────┬──────────────────────────────────────────────▲───────────────┘
-                   │                                              │
-                   ▼                                              │
-┌──────────────────────────────────────┐       ┌──────────────────┴───────────────┐
-│     OPENCV DETERMINISTIC ENGINE      │       │     PYTORCH HYBRID MLP ENGINE    │
-│  - Laplacian Operator Sharpness      │       │  - 6 Input Feature Vector Nodes  │
-│  - HSV Luminance Distribution        │──────▶│  - Hidden FC Layers (32 -> 16)   │
-│  - Residual Differential Noise       │       │  - Head 1: Quality Score [0-100] │
-│  - Boundary Histogram Clipping       │       │  - Head 2: Defect Multi-Label    │
-│  - 32x32 Spatial Heatmap Generator   │       │    [Blur, Exposure, Noise, etc.] │
-└──────────────────────────────────────┘       └──────────────────────────────────┘
+[User Browser]
+       │
+       ▼ (1. Drag-and-Drop Image / Batch of Images)
+[React 18 SPA Frontend] ──(2. Multipart HTTP POST Request)──▶ [FastAPI Backend]
+                                                                      │
+                                   ┌──────────────────────────────────┴──────────────────────────────────┐
+                                   ▼                                                                     ▼
+                      [Computer Vision Engine (OpenCV)]                                      [Database Layer (SQLite)]
+                      - Sharpness via Laplacian Variance                                     - Persists raw scores,
+                      - Exposure via HSV Luminance                                             defect categories, and
+                      - Noise via High-Frequency Residuals                                     timestamps using SQLAlchemy
+                      - Dynamic Range Clipping Index
+                      - 16x16 Grid Spatial Heatmap Generator
+                                   │
+                                   ▼ (Feature Vector [6-D])
+                      [PyTorch Multi-Task MLP Network]
+                      - Regresses Overall Quality Score (0 - 100)
+                      - Predicts Defect Probabilities (Blur, Noise, Exposure, Corruption)
+                                   │
+                                   ▼
+                      [JSON Response + Base64 Heatmap Overlay] ──▶ [React Frontend Visualizer]
 ```
 
----
-
-## 🎯 Defect Taxonomy & Detection Capabilities
-
-| Defect Category | Physical / Digital Root Cause | OpenCV Detection Method | PyTorch Classification Output |
-| :--- | :--- | :--- | :--- |
-| **Blur / Low Sharpness** | Defocus blur, camera shake, motion artifacts | Variance of Laplacian ($ \sigma^2(\nabla^2 I) $) | Logit 0 (`blur`) |
-| **Underexposure** | Insufficient sensor light, low ISO/shutter speed | HSV Value channel Mean ($ \mu_V < 0.35 $) | Logit 1 (`underexposure`) |
-| **Overexposure** | Sensor blowout, harsh direct lighting, flash washout | HSV Value channel Mean ($ \mu_V > 0.75 $) | Logit 2 (`overexposure`) |
-| **Image Noise** | High ISO sensor gain, thermal sensor noise, compression grain | High-frequency absolute difference residual ($ \mu(\vert I - G_\sigma * I \vert) $) | Logit 3 (`noise`) |
-| **Corruption / Severe Degradation** | Data transmission loss, file chunk corruption, dead sensor pixels | Boundary histogram clipping at 0 and 255 | Logit 4 (`corruption`) |
-| **Potential Visual Defect** | Multi-factor degradation anomalies | Global Quality Score degradation trigger ($ Q < 40 $) | Generic fallback anomaly |
+### Execution Steps:
+1. **User Interaction**: The user uploads single or multiple images through the React user interface.
+2. **Preprocessing & Feature Extraction**: The FastAPI backend receives the binary stream and resizes images to a standard dimension ($512 \times 512$). OpenCV calculates statistical metrics representing sharpness, luminance, contrast, noise, saturation, and corruption.
+3. **Heatmap Generation**: OpenCV divides the image into a $16 \times 16$ spatial grid, evaluates localized edge transitions, and renders a JET-colormap heatmap overlay.
+4. **Neural Inference**: The 6 extracted statistical features are fed into a trained PyTorch neural network that outputs the overall continuous quality score and defect probabilities.
+5. **Persistence**: The results are stored in SQLite.
+6. **Visualization**: The frontend renders the quality score meter, severity tags, statistical breakdown bars, and the side-by-side thermal heatmap.
 
 ---
 
-## 🔬 Computer Vision Feature Engineering
+## 🛠 Technology Stack
 
-All images are processed at a normalized resolution of $512 \times 512$ for consistency across feature calculations:
-
-### 1. Sharpness Formulation (Laplacian Variance)
-The discrete Laplacian operator approximates the second spatial derivative of the grayscale image $I$:
-$$\nabla^2 I = \frac{\partial^2 I}{\partial x^2} + \frac{\partial^2 I}{\partial y^2}$$
-Convolved with the standard $3 \times 3$ kernel:
-$$K = \begin{bmatrix} 0 & 1 & 0 \\ 1 & -4 & 1 \\ 0 & 1 & 0 \end{bmatrix}$$
-The edge variance is then computed:
-$$\text{Sharpness} = \frac{1}{N} \sum_{x,y} \left( (\nabla^2 I)(x,y) - \mu_{\nabla^2 I} \right)^2$$
-*Sharp images contain high-frequency edges yielding high variance; blurry images exhibit minimal high-frequency transitions resulting in near-zero variance.*
-
-### 2. Luminance & Exposure Metrics
-Converting from BGR to HSV color space decouples chromaticity from intensity:
-$$V(x,y) = \max(R(x,y), G(x,y), B(x,y))$$
-$$\mu_{\text{Brightness}} = \frac{1}{N} \sum_{x,y} V(x,y), \quad \sigma_{\text{Contrast}} = \sqrt{\frac{1}{N} \sum_{x,y} (V(x,y) - \mu_V)^2}$$
-
-### 3. Residual Noise Estimation
-Noise is measured by isolating high-frequency components from the smoothed low-frequency image:
-$$\text{Noise Level} = \frac{1}{N} \sum_{x,y} \left| I(x,y) - (I * G_{5\times 5})(x,y) \right|$$
-where $G_{5\times 5}$ is a Gaussian filter with zero mean.
-
-### 4. Histogram Clipping (Corruption Index)
-Measures saturation or pixel loss at dynamic range boundaries:
-$$\text{Clipping Fraction} = \frac{\text{Count}(I(x,y) == 0) + \text{Count}(I(x,y) == 255)}{512 \times 512}$$
+| Layer | Technologies | Role & Purpose |
+| :--- | :--- | :--- |
+| **Frontend** | React 18, Vite, Vanilla CSS | Single Page Application with dark-mode glassmorphic aesthetics, drag-and-drop dropzone, dynamic radial gauge, and heatmap visualizer. |
+| **Backend API** | Python 3.11, FastAPI, Uvicorn | Asynchronous REST gateway handling file parsing, validation, ML pipeline orchestration, and OpenAPI documentation. |
+| **Machine Learning** | PyTorch (`torch`, `torchvision`) | Multi-task Multilayer Perceptron (MLP) neural network with dual output heads. |
+| **Computer Vision** | OpenCV (`opencv-python-headless`), NumPy | Deterministic photometric feature extraction, edge filtering, and spatial heatmap generation. |
+| **Database** | SQLite, SQLAlchemy 2.0 ORM | Lightweight, zero-config relational database for analysis logging. |
+| **DevOps & CI/CD** | GitHub Actions, Docker, Docker Compose | Continuous integration pipeline executing automated test suites and multi-stage container builds. |
+| **Testing** | Pytest, HTTPX | Automated unit and integration testing suite for API endpoints and ML modules. |
 
 ---
 
-## 🧠 Hybrid AI / Machine Learning Engine
+## 🔬 Theoretical Methodology: Computer Vision & Feature Extraction
 
-### Model Architecture (`backend/app/ml/model.py`)
+Rather than treating image quality assessment as an uninterpretable deep neural network problem, our solution extracts domain-engineered computer vision features:
+
+### 1. Blur / Sharpness Analysis (Laplacian Variance)
+* **Theory**: In an in-focus, sharp image, edges are characterized by rapid transitions in pixel intensity (high spatial frequencies). Blurring acts as a low-pass filter that smooths out these rapid transitions.
+* **Mechanism**: We convolve the grayscale image with a discrete Laplacian second-derivative operator. Sharp images generate significant variance across the edge response map, whereas blurry images yield near-zero variance.
+
+### 2. Exposure & Photometric Distribution (HSV Luminance)
+* **Theory**: Converting RGB images to the HSV (Hue, Saturation, Value) color space separates chromatic information from intensity.
+* **Mechanism**: 
+  * The **Mean of the Value channel** represents average scene luminance. Extremely low mean values indicate underexposure (crushed shadows), while high values indicate overexposure (blown-out highlights).
+  * The **Standard Deviation of the Value channel** reflects overall scene dynamic contrast.
+
+### 3. Image Noise Estimation (Residual High-Frequency Filtering)
+* **Theory**: Sensor noise and ISO grain manifest as high-frequency pseudo-random variations across neighboring pixels.
+* **Mechanism**: We apply a Gaussian smoothing filter to suppress high-frequency noise, creating a reference low-frequency image. Subtracting this smoothed image from the original grayscale image isolates high-frequency residual noise.
+
+### 4. Corruption & Artifact Detection (Boundary Histogram Clipping)
+* **Theory**: Digital transmission errors, sensor sensor burnouts, and patch corruptions often produce unnatural clusters of solid black ($0$) or solid white ($255$) pixels.
+* **Mechanism**: We measure the fraction of total pixels located at the extreme boundaries of the 8-bit intensity histogram.
+
+---
+
+## 🧠 AI / Machine Learning Model Architecture
+
+The machine learning component is implemented in **PyTorch** as a Multi-Task Multilayer Perceptron (`QualityAssessmentMLP`):
+
 ```
-Input Vector [6] (Sharpness, Brightness, Contrast, Noise, Saturation, Clipping)
-      │
-      ▼
-Linear Layer 1:  6 -> 32  +  ReLU Activation
-      │
-      ▼
-Linear Layer 2: 32 -> 16  +  ReLU Activation
-      │
-      ├───▶ Quality Head: Linear(16 -> 1)  + Sigmoid  ──▶ Overall Quality Score [0.0 - 1.0]
-      │
-      └───▶ Defect Head:  Linear(16 -> 5)  + Sigmoid  ──▶ Probabilities [P(Blur), P(Under), P(Over), P(Noise), P(Corrupt)]
+Feature Vector (Sharpness, Brightness, Contrast, Noise, Saturation, Clipping) [6]
+                                 │
+                                 ▼
+                     Linear Layer (6 ──▶ 32) + ReLU
+                                 │
+                                 ▼
+                     Linear Layer (32 ──▶ 16) + ReLU
+                                 │
+                 ┌───────────────┴───────────────┐
+                 ▼                               ▼
+       [Quality Regression Head]       [Defect Classification Head]
+         Linear (16 ──▶ 1) + Sigmoid     Linear (16 ──▶ 5) + Sigmoid
+                 │                               │
+                 ▼                               ▼
+      Overall Quality Score [0-100]    Probabilities: Blur, Underexposure,
+                                       Overexposure, Noise, Corruption
 ```
 
-### Multi-Task Objective Function
-The network is trained using a weighted composite loss:
-$$\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{MSE}}(Q_{\text{pred}}, Q_{\text{true}}) + 2.0 \cdot \mathcal{L}_{\text{BCE}}(D_{\text{pred}}, D_{\text{true}})$$
-- $\mathcal{L}_{\text{MSE}}$: Mean Squared Error enforcing smooth regression for continuous quality scoring.
-- $\mathcal{L}_{\text{BCE}}$: Binary Cross-Entropy over all 5 multi-label defect channels.
-- **Optimizer**: Adam ($\text{lr} = 0.005$).
-- **Epochs**: 150 with automatic best-validation checkpointing to `model.pth`.
+### Multi-Task Loss Objective:
+The network is optimized using a combined composite loss function:
+* **Quality Score Regression**: Mean Squared Error ($\text{MSE}$) between predicted and ground-truth quality scores.
+* **Defect Classification**: Multi-label Binary Cross-Entropy ($\text{BCE}$) across the 5 independent defect probability logits.
+* **Joint Optimization**: The defect loss is weighted ($2.0 \times$) relative to the regression loss to ensure the network strictly penalizes missed defect identification.
 
 ---
 
-## 🗺 Explainability & Spatial Quality Heatmaps
+## 🔄 Dataset & Synthetic Degradation Pipeline
 
-In accordance with requirement Section 10 (Explainability & Localization), the system does not merely output an aggregate number:
+To ensure 100% reproducibility without requiring gigabytes of external dataset downloads, the platform features a self-contained synthetic dataset generator:
 
-1. **Spatial Grid Partitioning**: The image is subdivided into a $16 \times 16$ grid of $32 \times 32$ pixel patches.
-2. **Local Feature Variance**: The discrete Laplacian variance is evaluated independently across each patch.
-3. **Inversion & Normalization**: The variance values are normalized to $[0, 255]$ and inverted so that regions of highest degradation (lowest edge variance) correspond to maximum thermal values ($255$).
-4. **Color Mapping & Alpha Blending**:
-   $$\text{Overlay} = \alpha \cdot I_{\text{original}} + \beta \cdot \text{COLORMAP\_JET}(H_{\text{inv}})$$
-   where $\alpha = 0.6$ and $\beta = 0.4$.
-5. **Base64 Serialization**: The resulting image is encoded into a Base64 JPEG data URL and transmitted to the client for instant side-by-side rendering.
+### 1. Base Image Acquisition (`download_images.py`)
+* Automatically fetches 20 high-resolution clean base images via the Picsum REST API.
+* **Procedural Fallback**: If external internet access is unavailable or rate-limited during deployment/testing, the script automatically generates synthetic textured images using geometric primitives and color gradients.
 
----
+### 2. Synthetic Degradation Transformations (`train.py`)
+From each clean base image, the pipeline programmatically generates 30 controlled variations by injecting precise physical degradations:
+* **Blur**: Variable Gaussian kernels ($5\times 5$, $11\times 11$, $15\times 15$, $21\times 21$).
+* **Underexposure**: Down-scaling intensity values ($30\% - 60\%$).
+* **Overexposure**: Up-scaling intensities ($150\% - 200\%$) with positive additive bias.
+* **Gaussian Noise**: Additive zero-mean Gaussian distribution with variable standard deviation.
+* **Patch Corruption**: Random rectangular black-out masks simulating transmission packet loss.
 
-## 🔄 Synthetic Dataset Generation Pipeline
-
-To eliminate the need for manual dataset curation or multi-gigabyte downloads while guaranteeing reproducibility:
-
-1. `backend/download_images.py` fetches clean, high-resolution royalty-free base images via Picsum API ($512 \times 512$).
-2. `backend/app/ml/train.py` applies parameterized synthetic transformations:
-   - **Gaussian Blur**: Kernel sizes $k \in \{5, 11, 15, 21\}$.
-   - **Photometric Scaling**: Multipliers $\alpha \in [0.3, 0.6]$ (underexposure) and $\alpha \in [1.5, 2.0]$ with $+50$ bias (overexposure).
-   - **Gaussian Noise Injection**: Zero-mean additive noise with standard deviation $\sigma \in [10, 50]$.
-   - **Patch Corruption**: Random rectangular zero-masking simulating transmission packet loss.
-3. **Ground Truth Assignment**: Degradation parameters programmatically calculate deterministic ground-truth labels and scores, creating a balanced train/validation split ($80\% / 20\%$).
+### 3. Balanced Training
+Each degradation mathematically decrements the ground-truth quality score and sets corresponding defect binary labels, yielding a balanced dataset split ($80\%$ training, $20\%$ validation) for supervised learning.
 
 ---
 
-## 📡 Backend REST API Specification
+## 🗺 Explainability & Spatial Heatmaps (Localization)
 
-Interactive OpenAPI documentation is automatically served at `/docs` (Swagger UI) and `/redoc`.
+Beyond returning numerical scores, the system localizes problematic regions:
 
-### 1. Single Image Analysis
-- **Endpoint**: `POST /api/v1/analyze`
-- **Content-Type**: `multipart/form-data`
-- **Parameters**: `file` (Binary Image File)
+1. **Patch-based Grid Analysis**: The image is partitioned into a $16 \times 16$ grid of $32 \times 32$ pixel patches.
+2. **Localized Edge Density**: The Laplacian variance is computed independently for each patch.
+3. **Inversion & Normalization**: The variance grid is normalized and inverted so that regions of highest degradation (loss of sharpness/detail) receive the maximum thermal index.
+4. **Colormap Blending**: The thermal grid is mapped through OpenCV's `COLORMAP_JET` and alpha-blended ($60\%$ original, $40\%$ heatmap overlay).
+5. **Base64 Transmission**: The resulting overlay is transmitted as a Base64-encoded image for real-time visualization on the frontend.
 
-#### Response Schema (`200 OK`):
+---
+
+## 📂 Codebase Architecture & File-by-File Guide
+
+```
+iiit_assignment/
+├── backend/
+│   ├── app/
+│   │   ├── main.py               # FastAPI application entrypoint & CORS middleware
+│   │   ├── api.py                # REST route handlers (/analyze, /analyze-batch, /history, /health)
+│   │   ├── database.py           # SQLAlchemy SQLite database session manager
+│   │   ├── models.py             # SQLAlchemy ORM database models
+│   │   └── ml/
+│   │       ├── model.py          # PyTorch Multi-Task MLP neural network definition
+│   │       ├── cv_features.py    # OpenCV feature extraction & spatial heatmap generator
+│   │       ├── inference.py      # End-to-end inference wrapper & defect thresholding
+│   │       ├── train.py          # Synthetic dataset generation & PyTorch training routine
+│   │       └── cli_inference.py  # Standalone CLI utility for headless image evaluation
+│   ├── download_images.py        # Base image downloader with procedural fallback
+│   ├── requirements.txt          # Python package dependencies
+│   ├── conftest.py               # Pytest path resolution configuration
+│   ├── Dockerfile                # Multi-stage backend container definition
+│   └── tests/
+│       └── test_api.py           # Automated test suite (routes, ML inference, DB)
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx               # Main React UI component (Dropzone, Score Meter, Heatmap viewer)
+│   │   ├── index.css             # Vanilla CSS design tokens, glassmorphism & dark-mode styling
+│   │   └── main.jsx              # React DOM root mounting
+│   ├── package.json              # Frontend dependencies (React, Vite, Axios, Lucide)
+│   ├── Dockerfile                # Multi-stage Nginx production container definition
+│   └── index.html                # HTML entrypoint
+├── .github/
+│   └── workflows/
+│       └── main.yml              # GitHub Actions CI/CD automated test & build workflow
+├── docker-compose.yml            # Multi-container orchestration specification
+├── .gitignore                    # Root git exclusion rules
+└── README.md                     # Comprehensive project documentation
+```
+
+### Detailed Component Roles:
+* [`backend/app/ml/cv_features.py`](backend/app/ml/cv_features.py): Extracts numerical statistics (sharpness, brightness, contrast, noise, saturation, clipping) and generates the JET colormap heatmap.
+* [`backend/app/ml/model.py`](backend/app/ml/model.py): Defines the dual-head PyTorch neural network.
+* [`backend/app/ml/inference.py`](backend/app/ml/inference.py): Loads the trained `model.pth`, executes the feature extraction, runs tensor forward passes, and applies confidence thresholding.
+* [`backend/app/api.py`](backend/app/api.py): Provides endpoints for single-image upload, batch processing, database logging, and historical query retrieval.
+* [`frontend/src/App.jsx`](frontend/src/App.jsx): React component featuring drag-and-drop batch ingestion, dynamic radial SVG score meters, defect severity badges, and side-by-side thermal heatmap comparison.
+
+---
+
+## 📡 REST API Specification
+
+### 1. Analyze Single Image
+* **POST** `/api/v1/analyze`
+* **Content-Type**: `multipart/form-data`
+* **Request Body**: `file` (Binary Image File)
+
+#### Response Example (`200 OK`):
 ```json
 {
   "id": 1,
@@ -236,89 +254,82 @@ Interactive OpenAPI documentation is automatically served at `/docs` (Swagger UI
     "saturation": 0.548,
     "clipping_fraction": 0.002
   },
-  "heatmap": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ..."
+  "heatmap": "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
 }
 ```
 
-### 2. Batch Image Analysis
-- **Endpoint**: `POST /api/v1/analyze-batch`
-- **Content-Type**: `multipart/form-data`
-- **Parameters**: `files` (Array of Binary Image Files)
+### 2. Analyze Batch of Images
+* **POST** `/api/v1/analyze-batch`
+* **Content-Type**: `multipart/form-data`
+* **Request Body**: `files` (Array of Binary Image Files)
+* **Response**: Returns a JSON object containing `batch_results` array with individual analysis records.
 
-### 3. Historical Analyses
-- **Endpoint**: `GET /api/v1/history?skip=0&limit=50`
-- **Response**: Array of historical database objects with timestamps.
+### 3. Analysis History
+* **GET** `/api/v1/history?skip=0&limit=50`
+* **Response**: Array of historical database records ordered chronologically.
 
-### 4. Health & Readiness Probe
-- **Endpoint**: `GET /api/v1/health`
-- **Response**: `{"status": "ok"}`
+### 4. Health Check
+* **GET** `/api/v1/health`
+* **Response**: `{"status": "ok"}`
 
 ---
 
-## 🗄 Database Schema & Persistence
+## 🚀 Quick Start & Setup Guide
 
-Data is managed using **SQLAlchemy 2.0 ORM** backed by an ACID-compliant **SQLite** database (`sql_app.db`).
+### 1. Start Backend Service
+```powershell
+cd backend
 
-```sql
-CREATE TABLE analysis_results (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    filename VARCHAR INDEX,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    quality_score INTEGER,
-    quality_label VARCHAR,
-    issues JSON,
-    stats JSON
-);
+# Create & activate Python virtual environment
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+# On macOS/Linux: source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Download base images & train model (one-time setup)
+python download_images.py
+python app/ml/train.py
+
+# Launch FastAPI server
+uvicorn app.main:app --reload --port 8000
 ```
+* Interactive API Documentation (Swagger UI): **[http://localhost:8000/docs](http://localhost:8000/docs)**
 
----
-
-## 💻 Frontend UI/UX Implementation
-
-The frontend is a single-page application built on **React 18** and **Vite** styled exclusively with modern **Vanilla CSS**:
-- **Aesthetic Design**: Dark theme (`#0f172a`), radial lighting accents, glassmorphic cards (`backdrop-filter: blur(12px)`), and modern typography.
-- **Interactive Drag-and-Drop Dropzone**: Native HTML5 Drag and Drop API supporting simultaneous multiple-file ingestion with instant client-side thumbnail previews.
-- **Dynamic Circular Gauge**: SVG radial dash-array progress meter color-coded dynamically (Green $\ge 80$, Orange $\ge 50$, Red $< 50$).
-- **Heatmap Viewer**: Dual-view image comparison displaying the original input and the localized degradation heatmap.
+### 2. Start Frontend UI (In a new terminal)
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+* Web Application Interface: **[http://localhost:5173](http://localhost:5173)**
 
 ---
 
 ## 🖥 CLI Inference Utility
 
-For headless environments or automation scripts, you can evaluate images directly from the command line:
+For headless environments, automated batch scripts, or quick evaluations without starting the web server:
 
-```bash
+```powershell
 cd backend
-python app/ml/cli_inference.py path/to/sample.jpg --save-heatmap output_heatmap.jpg
+python app/ml/cli_inference.py path/to/image.jpg --save-heatmap heatmap_output.jpg
 ```
 
 ---
 
-## 🧪 Automated Verification & Testing
+## 🧪 Automated Testing & Verification
 
-The backend includes an automated test suite in `backend/tests/test_api.py`:
+The test suite validates database isolation, API routes, batch handling, and invalid file rejection:
 
-```bash
+```powershell
 cd backend
-pytest tests/ -v
+python -m pytest tests/ -v
 ```
 
-### Verified Test Cases:
-- `test_health_check`: Validates HTTP 200 health probe.
-- `test_analyze_image`: Tests single-image upload, database persistence, quality score generation, and base64 heatmap validity.
-- `test_analyze_batch`: Tests multi-part batch endpoints and response formatting.
-- `test_analyze_invalid_file`: Tests HTTP 400 rejection for non-image payloads.
-
----
-
-## 📊 Assessment Criteria Alignment Matrix
-
-| Assessment Requirement | Specific File Implementation | Technical Justification |
-| :--- | :--- | :--- |
-| **Computer Vision Reasoning (15%)** | [`backend/app/ml/cv_features.py`](backend/app/ml/cv_features.py) | Laplacian edge variance, HSV luminance distributions, residual noise difference filters, histogram clipping. |
-| **AI / ML Implementation (25%)** | [`backend/app/ml/model.py`](backend/app/ml/model.py), [`backend/app/ml/train.py`](backend/app/ml/train.py) | Dual-head PyTorch MLP with joint MSE + BCE multi-task loss function. |
-| **Model Evaluation & Rigor (15%)** | [`backend/app/ml/train.py`](backend/app/ml/train.py), [`backend/tests/`](backend/tests/) | 80/20 train/validation split, automated synthetic degradation generation, checkpoint loss tracking. |
-| **Backend & API Implementation (15%)** | [`backend/app/api.py`](backend/app/api.py), [`backend/app/models.py`](backend/app/models.py) | FastAPI REST API, SQLite database persistence with SQLAlchemy, batch endpoints, error handling. |
-| **Frontend Functionality (10%)** | [`frontend/src/App.jsx`](frontend/src/App.jsx), [`frontend/src/index.css`](frontend/src/index.css) | React 18, drag-and-drop batch upload, radial score gauge, side-by-side thermal heatmap viewer. |
-| **Deployment & Reproducibility (10%)** | Local Python + Node Run | Zero-friction setup with automatic on-startup synthetic dataset training. |
-| **Code Quality & Documentation (10%)** | [`README.md`](README.md) | Exhaustive documentation with mathematical formulations, API schemas, and test suite. |
+### Automated Checks:
+* `test_health_check`: Validates HTTP 200 health probe.
+* `test_analyze_image`: Tests single-image upload, database persistence, quality score generation, and base64 heatmap validity.
+* `test_analyze_batch`: Tests multi-part batch endpoints and response formatting.
+* `test_analyze_invalid_file`: Tests HTTP 400 rejection for non-image payloads.
+* `test_get_history`: Tests database retrieval of past records.
