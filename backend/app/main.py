@@ -12,13 +12,28 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Allow CORS for frontend
+# Allow CORS for frontend (all origins allowed)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # For production, restrict this
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/")
+def root():
+    return {
+        "status": "online",
+        "service": "AI-Powered Image Quality & Defect Detection API",
+        "version": "1.0.0",
+        "docs_url": "/docs",
+        "endpoints": {
+            "health": "/api/v1/health",
+            "analyze": "POST /api/v1/analyze",
+            "analyze_batch": "POST /api/v1/analyze-batch",
+            "history": "GET /api/v1/history"
+        }
+    }
 
 app.include_router(router, prefix="/api/v1")

@@ -1,5 +1,7 @@
 # AI-Powered Image Quality & Defect Detection Platform
 
+[![Live Backend API](https://img.shields.io/badge/Live%20API-Render-brightgreen?logo=render)](https://image-quality-defect-detection-760o.onrender.com)
+[![Swagger Docs](https://img.shields.io/badge/API%20Docs-Swagger-blue?logo=swagger)](https://image-quality-defect-detection-760o.onrender.com/docs)
 [![CI/CD Pipeline](https://github.com/lakshminarasimmann/mage-quality-defect-detection/actions/workflows/main.yml/badge.svg)](https://github.com/lakshminarasimmann/mage-quality-defect-detection/actions/workflows/main.yml)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-009688?logo=fastapi)](https://fastapi.tiangolo.com)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.1.2-EE4C2C?logo=pytorch)](https://pytorch.org)

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Upload, Activity, AlertTriangle, CheckCircle } from 'lucide-react';
 import './index.css';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://image-quality-defect-detection-760o.onrender.com';
 
 function App() {
   const [files, setFiles] = useState([]);
