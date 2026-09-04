@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import './index.css';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://image-quality-defect-detection-760o.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:8000' : 'https://image-quality-defect-detection-760o.onrender.com');
 
 export default function App() {
   const [files, setFiles] = useState([]);

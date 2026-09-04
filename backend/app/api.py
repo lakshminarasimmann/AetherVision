@@ -12,9 +12,15 @@ router = APIRouter()
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+def is_valid_image(file: UploadFile) -> bool:
+    if file.content_type:
+        return file.content_type.startswith("image/")
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    return ext in [".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tiff", ".gif"]
+
 @router.post("/analyze")
 async def analyze_image(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    if not file.content_type.startswith("image/"):
+    if not is_valid_image(file):
         raise HTTPException(status_code=400, detail="File provided is not an image.")
         
     try:
@@ -59,7 +65,7 @@ async def analyze_image(file: UploadFile = File(...), db: Session = Depends(get_
 async def analyze_batch(files: List[UploadFile] = File(...), db: Session = Depends(get_db)):
     results = []
     for file in files:
-        if not file.content_type.startswith("image/"):
+        if not is_valid_image(file):
             results.append({"filename": file.filename, "error": "Not an image file"})
             continue
             
